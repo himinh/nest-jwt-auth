@@ -20,17 +20,27 @@ import { Role } from 'src/common/enums';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(RoleGuard(Role.User, Role.Admin))
   @Get()
   getUsers() {
     return this.userService.getUsers();
   }
 
+  @UseGuards(AtGuard)
   @Get('profile')
   getProfile(@GetCurrentUserId() userId: string) {
     return this.userService.getUserById(userId);
   }
 
+  @UseGuards(AtGuard)
+  @Patch('profile')
+  updateProfile(
+    @GetCurrentUserId() userId: string,
+    @Body() body: UpdateUserDto,
+  ) {
+    return this.userService.updateUser(userId, body);
+  }
+
+  @UseGuards(RoleGuard(Role.Admin))
   @Get(':userId')
   getUserById(@Param('userId') userId: string) {
     return this.userService.getUserById(userId);
@@ -41,12 +51,13 @@ export class UserController {
     return this.userService.createUser(body);
   }
 
+  @UseGuards(RoleGuard(Role.Admin))
   @Patch(':userId')
   updateUser(@Param('userId') userId: string, @Body() body: UpdateUserDto) {
     return this.userService.updateUser(userId, body);
   }
 
-  @Public()
+  @UseGuards(RoleGuard(Role.Admin))
   @Delete(':userId')
   deleteUser(@Param('userId') userId: string) {
     return this.userService.deleteUser(userId);

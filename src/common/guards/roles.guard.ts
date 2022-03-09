@@ -7,6 +7,7 @@ export const RoleGuard = (...roles: Role[]): Type<CanActivate> => {
     async canActivate(context: ExecutionContext) {
       await super.canActivate(context);
 
+      if (!roles.length) return true;
       const request = context.switchToHttp().getRequest();
       const user = request.user;
 
