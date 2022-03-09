@@ -1,3 +1,5 @@
+import { registerAs } from '@nestjs/config';
+
 export const cookieOptions = {
   signed: true,
   path: '/api/auth/access',

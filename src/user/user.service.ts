@@ -19,8 +19,10 @@ export class UserService {
     return this.userModel.find();
   }
 
-  getUserById(userId: string) {
-    return this.userModel.findById(userId);
+  async getUserById(userId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('Not found user.');
+    return user;
   }
 
   getUserByEmail(email: string) {
@@ -50,6 +52,20 @@ export class UserService {
 
     Object.assign(user, userBody);
     await user.save();
+    return user;
+  }
+
+  async updatePassword(userId: string, password: string) {
+    const hashPassword = await this.hashData(password);
+
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { password: hashPassword },
+      { new: true },
+    );
+
+    if (!user) throw new NotFoundException('Not found user.');
+
     return user;
   }
 

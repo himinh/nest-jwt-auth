@@ -1,15 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import {
-  accessExpiration,
-  accessSecret,
-  refreshExpiration,
-  refreshSecret,
-} from 'src/config/configuration';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from 'src/email/email.service';
+import { TokenService } from 'src/tokes/token.service';
 import { CreateUserDto } from 'src/user/dto/user.dto';
 import { UserService } from 'src/user/user.service';
 import { Tokens } from './types';
@@ -18,15 +10,20 @@ import { Tokens } from './types';
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async register(userBody: CreateUserDto): Promise<Tokens> {
     const user = await this.userService.createUser(userBody);
-    const tokens = await this.getTokens(user.id, {
+
+    const tokenPayload = {
+      id: user.id,
+      name: user.name,
       email: user.email,
       role: user.role,
-    });
+    };
+    const tokens = await this.getTokens(tokenPayload);
     return tokens;
   }
 
@@ -34,34 +31,61 @@ export class AuthService {
     const user = await this.userService.getUserByEmail(email);
     if (!user || !(await user.isPasswordMatch(password)))
       throw new BadRequestException('Incorrect email or password');
-    return this.getTokens(user.id, { email: user.email, role: user.role });
+
+    const tokenPayload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+    return this.getTokens(tokenPayload);
   }
 
-  async refreshToken(refreshToken: string) {
-    if (!refreshToken) throw new UnauthorizedException();
-    const { sub: userId, email, role } = await this.verifyToken(refreshToken);
-    return this.getTokens(userId, { email, role });
+  async refreshToken(refresh: string) {
+    const data = await this.tokenService.verifyRefreshToken(refresh);
+    return this.getTokens(data);
   }
 
-  private async verifyToken(token: string) {
-    const decoded = await this.jwtService.verifyAsync(token, {
-      secret: refreshSecret,
-    });
-    return decoded;
-  }
-
-  async getTokens(userId: string, data: { email: string; role: string }) {
+  async getTokens(user: {
+    id: string;
+    email: string;
+    role: string;
+    name: string;
+  }) {
     const [access_token, refresh_token] = await Promise.all([
-      this.jwtService.signAsync(
-        { sub: userId, ...data },
-        { secret: accessSecret, expiresIn: accessExpiration },
-      ),
-      this.jwtService.signAsync(
-        { sub: userId, ...data },
-        { secret: refreshSecret, expiresIn: refreshExpiration },
-      ),
+      this.tokenService.generateAccessToken(user),
+      this.tokenService.generateRefreshToken(user),
     ]);
-
     return { access_token, refresh_token };
+  }
+
+  async forgotPassword(email: string) {
+    // check user
+    const user = await this.userService.getUserByEmail(email);
+    if (!user)
+      throw new BadRequestException('Email does not exist in the system.');
+
+    const tokenPayload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+
+    // generate token
+    const token = await this.tokenService.generateAccessToken(tokenPayload);
+
+    // send mail
+    let info = await this.emailService.sendMailResetPassword(
+      user.email,
+      token,
+      user.name,
+    );
+    return info;
+  }
+
+  async resetPassword(userId: string, password: string) {
+    const user = await this.userService.updatePassword(userId, password);
+    return user;
   }
 }
