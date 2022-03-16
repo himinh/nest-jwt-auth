@@ -3,7 +3,9 @@ import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import mongoose from 'mongoose';
 import { Khoa } from 'src/khoa/schemas/khoa.schema';
+
 export type LopDocument = Lop & Document;
+
 @Schema({
   timestamps: true,
   toJSON: {
@@ -15,7 +17,7 @@ export type LopDocument = Lop & Document;
     },
   },
 })
-class Lop {
+export class Lop {
   @Prop({ type: String, required: true, trim: true })
   tenLop: string;
 

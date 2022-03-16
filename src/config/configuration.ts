@@ -2,7 +2,6 @@ import { registerAs } from '@nestjs/config';
 
 export const cookieOptions = {
   signed: true,
-  path: '/api/auth/access',
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7days
   httpOnly: true,
   sameSite: true,

@@ -33,7 +33,6 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-
 UserSchema.methods = {
   isPasswordMatch(password: string) {
     return argon2.verify(this.password, password);

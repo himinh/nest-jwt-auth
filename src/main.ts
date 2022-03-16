@@ -4,6 +4,7 @@ import { AppModule } from './app/app.module';
 import * as cookieParser from 'cookie-parser';
 // import { refreshSecret } from './config/configuration';
 import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,15 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('API - Practice Exercise 1')
+    .setDescription('25 API in practice exercise 1')
+    .setVersion('1.0')
+    .build();
+
+  const doc = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api', app, doc);
 
   await app.listen(port);
 }

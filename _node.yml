@@ -15,6 +15,10 @@ Khoa(MaKhoa, TenKhoa, SoCBGD)
 MonHoc(MaMH, TenMH, SoTiet)
 KetQua(MaSV, MaMH, DiemThi)
 
+
+Khoa ---> Lop ---> SinhVien
+MonHoc --> KetQua
+
 Viết các api sau với NodeJS
 Câu 1: Liệt kê danh sách các lớp của khoa, thông tin cần Malop, TenLop, MaKhoa
 SELECT *
@@ -54,15 +58,15 @@ Câu 10: Liệt kê danh sách sinh viên được sắp xếp giảm dần theo
 SELECT *
 FROM SinhVien
 ORDER BY HocBong DESC
-Ví du11: Lập danh sách sinh viên có điểm thi môn CSDL>=8
+Câu 11: Lập danh sách sinh viên có điểm thi môn CSDL>=8
 SELECT SinhVien.MaSV, HoTen, Nu, NgaySinh, DiemThi
 FROM SinhVien INNER JOIN KetQua ON SinhVien.MaSV = KetQua.MaSV
 WHERE MaMH = 'CSDL' AND DiemThi>=8
-Ví du 12: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong,TenLop
+Câu 12: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong,TenLop
 SELECT MaSV, HoTen, HocBong, TenLop
 FROM Lop INNER JOIN SinhVien ON Lop.MaLop=SinhVien.MaLop
 WHERE HocBong>0 AND MaKhoa ='CNTT'
-Ví du 13: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong,TenLop, TenKhoa
+Câu 13: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong,TenLop, TenKhoa
 SELECT MaSV, HoTen, HocBong, TenLop,TenKhoa
 FROM ((Lop INNER JOIN SinhVien ON Lop.MaLop=SinhVien.MaLop) INNER JOIN Khoa ON Khoa.MaKhoa=Lop.MaKhoa)
 WHERE HocBong>0 AND Khoa.MaKhoa ='CNTT'
@@ -103,7 +107,7 @@ SELECT Khoa.MaKhoa, TenKhoa, Sum(HocBong) as TongHB
 FROM ((Khoa INNER JOIN Lop ON Khoa.Makhoa = Lop.MaKhoa)INNER JOIN SinhVien ON Lop.MaLop = SinhVien.MaLop)
 GROUP BY Khoa.MaKhoa, TenKhoa
 HAVING Sum(HocBong)>= 1000000
-Câu22: Lập danh sách sinh viên có học bổng cao nhất
+Câu 22: Lập danh sách sinh viên có học bổng cao nhất
 SELECT SinhVien.*
 FROM SinhVien
 WHERE HocBong>= ALL(SELECT HocBong From Sinhvien)

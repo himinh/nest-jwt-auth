@@ -15,25 +15,25 @@ export class UserService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  getUsers() {
+  async getUsers(): Promise<UserDocument[]> {
     return this.userModel.find();
   }
 
-  async getUserById(userId: string) {
+  async getUserById(userId: string): Promise<UserDocument> {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('Not found user.');
     return user;
   }
 
-  getUserByEmail(email: string) {
+  async getUserByEmail(email: string): Promise<UserDocument> {
     return this.userModel.findOne({ email }).select('+password');
   }
 
-  hashData(data: string) {
+  async hashData(data: string): Promise<string> {
     return argon2.hash(data);
   }
 
-  async createUser(userBody: CreateUserDto) {
+  async createUser(userBody: CreateUserDto): Promise<UserDocument> {
     const userExists = await this.getUserByEmail(userBody.email);
     if (userExists)
       throw new BadRequestException('Email already in the system.');
@@ -42,7 +42,10 @@ export class UserService {
     return this.userModel.create({ ...userBody, password: hashPassword });
   }
 
-  async updateUser(userId: string, userBody: UpdateUserDto) {
+  async updateUser(
+    userId: string,
+    userBody: UpdateUserDto,
+  ): Promise<UserDocument> {
     const user = await this.getUserById(userId);
 
     if (!user) throw new NotFoundException('Not found user.');
@@ -55,7 +58,10 @@ export class UserService {
     return user;
   }
 
-  async updatePassword(userId: string, password: string) {
+  async updatePassword(
+    userId: string,
+    password: string,
+  ): Promise<UserDocument> {
     const hashPassword = await this.hashData(password);
 
     const user = await this.userModel.findByIdAndUpdate(
@@ -69,7 +75,7 @@ export class UserService {
     return user;
   }
 
-  async deleteUser(userId: string) {
+  async deleteUser(userId: string): Promise<UserDocument> {
     const user = await this.userModel.findByIdAndDelete(userId);
     if (!user) throw new NotFoundException('Not found user.');
     return user;

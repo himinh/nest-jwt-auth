@@ -1,7 +1,7 @@
 // MonHoc(MaMH, TenMH, SoTiet)
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 
-export type MonHocHocDocument = MonHoc & Document;
+export type MonHocDocument = MonHoc & Document;
 @Schema({
   timestamps: true,
   toJSON: {

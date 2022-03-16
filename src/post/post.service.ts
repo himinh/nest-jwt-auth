@@ -25,7 +25,7 @@ export class PostService {
     const postUpdated = await this.postModel.findByIdAndUpdate(
       postId,
       postBody,
-      { new: true, overwrite: true },
+      { new: true },
     );
     if (!postUpdated) throw new NotFoundException('Not found post');
     return postUpdated;
