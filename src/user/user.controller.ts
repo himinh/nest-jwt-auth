@@ -6,8 +6,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
@@ -15,7 +13,9 @@ import { UserService } from './user.service';
 import { AtGuard, RoleGuard } from 'src/common/guards';
 import { GetCurrentUserId, Public, Roles } from 'src/common/decorators';
 import { Role } from 'src/common/enums';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

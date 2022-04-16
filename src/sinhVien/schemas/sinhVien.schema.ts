@@ -1,6 +1,8 @@
 // SinhVien(MaSV, HoTen, Nu, NgaySinh, MaLop, HocBong, Tinh)
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Type } from 'class-transformer';
+import mongoose, { Document } from 'mongoose';
+import { Lop } from 'src/lop/schemas/lop.schema';
 
 export type SinhVienDocument = SinhVien & Document;
 @Schema({
@@ -15,6 +17,10 @@ export type SinhVienDocument = SinhVien & Document;
   },
 })
 export class SinhVien {
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Lop.name, required: true })
+  @Type(() => Lop)
+  maLop: Lop;
+
   @Prop({ type: String, required: true, trim: true })
   hoTen: string;
 
@@ -22,10 +28,13 @@ export class SinhVien {
   nu: boolean;
 
   @Prop({ type: Date, min: '1960-12-31', max: '2018-12-31' })
-  ngaySinh: Date;
+  ngaySinh?: Date;
+
+  @Prop({ type: Number, default: 0 })
+  hocBong: number;
 
   @Prop({ type: String })
-  tinh: string;
+  tinh?: string;
 }
 
 export const SinhVienSchema = SchemaFactory.createForClass(SinhVien);

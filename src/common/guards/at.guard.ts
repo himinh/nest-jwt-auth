@@ -1,9 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { Observable } from 'rxjs';
-import { Role } from '../enums';
-import { IS_PUBLIC_KEY, ROLES_KEY } from '../decorators';
+import { IS_PUBLIC_KEY } from '../decorators';
 
 @Injectable()
 export class AtGuard extends AuthGuard('jwt') {

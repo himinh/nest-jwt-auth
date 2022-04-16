@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { EmailService } from 'src/email/email.service';
-import { TokenService } from 'src/tokes/token.service';
+import { TokenService } from 'src/tokens/token.service';
 import { CreateUserDto } from 'src/user/dto/user.dto';
 import { UserService } from 'src/user/user.service';
 import { Tokens } from './types';
