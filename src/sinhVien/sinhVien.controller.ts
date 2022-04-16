@@ -10,7 +10,9 @@ import {
 import { CreateSinhVienDto, UpdateSinhVienDto } from './dto/sinhVien.dto';
 import { SinhVienService } from './sinhVien.service';
 import { SinhVienDocument } from './schemas/sinhVien.schema';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('SinhVien')
 @Controller('sinhViens')
 export class SinhVienController {
   constructor(private readonly sinhVienService: SinhVienService) {}

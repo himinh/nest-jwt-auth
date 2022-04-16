@@ -12,7 +12,7 @@ export class SinhVienService {
   ) {}
 
   async getSinhViens(): Promise<SinhVienDocument[]> {
-    return this.sinhVienModel.find();
+    return this.sinhVienModel.find().populate('maLop', 'tenLop id');
   }
 
   async getSinhVienById(sinhVienId: string): Promise<SinhVienDocument> {

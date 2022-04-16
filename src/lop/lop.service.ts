@@ -11,7 +11,7 @@ export class LopService {
   ) {}
 
   async getLops(): Promise<LopDocument[]> {
-    return this.lopModel.find();
+    return this.lopModel.find().populate('maKhoa', 'tenKhoa id');
   }
 
   async getLopById(lopId: string): Promise<LopDocument> {

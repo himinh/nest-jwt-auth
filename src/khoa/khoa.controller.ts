@@ -7,10 +7,12 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CreateKhoaDto, UpdateKhoaDto } from './dto/khoa.dto';
 import { KhoaService } from './khoa.service';
 import { KhoaDocument } from './schemas/khoa.schema';
 
+@ApiTags('Khoa')
 @Controller('khoas')
 export class KhoaController {
   constructor(private readonly khoaService: KhoaService) {}

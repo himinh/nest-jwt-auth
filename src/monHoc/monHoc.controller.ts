@@ -7,10 +7,12 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CreateMonHocDto, UpdateMonHocDto } from './dto/monHoc.dto';
 import { MonHocService } from './monHoc.service';
 import { MonHocDocument } from './schemas/monHoc.schema';
 
+@ApiTags('MonHoc')
 @Controller('monHocs')
 export class MonHocController {
   constructor(private readonly monHocService: MonHocService) {}

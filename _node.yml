@@ -62,7 +62,7 @@ Câu 11: Lập danh sách sinh viên có điểm thi môn CSDL>=8
 SELECT SinhVien.MaSV, HoTen, Nu, NgaySinh, DiemThi
 FROM SinhVien INNER JOIN KetQua ON SinhVien.MaSV = KetQua.MaSV
 WHERE MaMH = 'CSDL' AND DiemThi>=8
-Câu 12: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong,TenLop
+Câu 12: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong, TenLop
 SELECT MaSV, HoTen, HocBong, TenLop
 FROM Lop INNER JOIN SinhVien ON Lop.MaLop=SinhVien.MaLop
 WHERE HocBong>0 AND MaKhoa ='CNTT'

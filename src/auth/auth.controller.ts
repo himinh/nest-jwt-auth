@@ -6,7 +6,9 @@ import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { AtGuard } from 'src/common/guards';
 import { ConfigService } from '@nestjs/config';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(

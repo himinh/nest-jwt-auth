@@ -1,7 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app/app.module';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 // import { refreshSecret } from './config/configuration';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -12,6 +13,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const refreshSecret = configService.get('REFRESH_SECRET');
   const port = configService.get('PORT');
+  app.use(helmet());
+  app.enableCors({
+    credentials: true,
+  });
 
   app.use(cookieParser(refreshSecret));
   app.setGlobalPrefix('api');

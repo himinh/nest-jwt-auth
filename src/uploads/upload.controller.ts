@@ -9,10 +9,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { ApiTags } from '@nestjs/swagger';
 import { Express } from 'express';
 import { storage } from './file-helper';
 import { UploadService } from './upload.service';
 
+@ApiTags('Uploads')
 @Controller('uploads')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}

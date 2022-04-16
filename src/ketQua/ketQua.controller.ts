@@ -7,10 +7,12 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CreateKetQuaDto, UpdateKetQuaDto } from './dto/ketQua.dto';
 import { KetQuaService } from './ketQua.service';
 import { KetQuaDocument } from './schemas/ketQua.schema';
 
+@ApiTags('KetQua')
 @Controller('ketQuas')
 export class KetQuaController {
   constructor(private readonly ketQuaService: KetQuaService) {}

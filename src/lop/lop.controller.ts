@@ -7,10 +7,12 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { CreateLopDto, UpdateLopDto } from './dto/lop.dto';
 import { LopService } from './lop.service';
 import { LopDocument } from './schemas/lop.schema';
 
+@ApiTags('Lop')
 @Controller('lops')
 export class LopController {
   constructor(private readonly lopService: LopService) {}

@@ -22,13 +22,21 @@ export class KetQua {
   @Prop({ type: Number, required: true, trim: true })
   diemThi: number;
 
-  @Prop({ type: mongoose.Types.ObjectId, ref: MonHoc.name, required: true })
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: MonHoc.name,
+    required: true,
+  })
   @Type(() => MonHoc)
-  maMH: mongoose.Types.ObjectId;
+  maMH: MonHoc;
 
-  @Prop({ type: mongoose.Types.ObjectId, ref: SinhVien.name, required: true })
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: SinhVien.name,
+    required: true,
+  })
   @Type(() => SinhVien)
-  maSV: mongoose.Types.ObjectId;
+  maSV: SinhVien;
 }
 
 export const KetQuaSchema = SchemaFactory.createForClass(KetQua);

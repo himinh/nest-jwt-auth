@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
 import { Model } from 'mongoose';
 import { KetQua, KetQuaDocument } from 'src/ketQua/schemas/ketQua.schema';
 import { Khoa, KhoaDocument } from 'src/khoa/schemas/khoa.schema';
@@ -112,7 +113,7 @@ export class BaiTapService {
 
   // Câu 11: Lập danh sách sinh viên có điểm thi môn CSDL>=8
   async cau11() {
-    const monCSDLId = '62300411ed9b0c051eae6067';
+    const monCSDLId = '622fe58e9ff19f0e85e41553';
     const cau11 = await this.ketQuaModel
       .find({ diemThi: { $gte: 8 }, maMH: monCSDLId })
       .populate('maSV')
@@ -120,63 +121,373 @@ export class BaiTapService {
     return cau11;
   }
 
-  // Câu 12: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong,TenLop
+  // Câu 12: Lập danh sách sinh viên có học bổng của khoa CNTT.
+  // Thông tin cần: MaSV, HoTen, HocBong,TenLop,
+
+  // maKhoa:  khoaCNTT
+  // maLop => Kho
+  // sinhVien => maLop
+
   async cau12() {
-    const cau12 = 'await this.baiTapService.cau12()';
+    const maKhoaCNTT = new mongoose.Types.ObjectId('622fe58e9ff19f0e85e41553');
+    const cau12 = await this.sinhVienModel.aggregate([
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: 'maLop',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { lop: 0 } },
+      { $match: { hocBong: { $gt: 0 }, maKhoa: maKhoaCNTT } },
+      { $project: { id: '$_id', hoTen: 1, hocBong: 1, tenLop: 1 } },
+    ]);
+
     return cau12;
   }
 
-  // Câu 13: Lập danh sách sinh viên có học bổng của khoa CNTT. Thông tin cần: MaSV, HoTen, HocBong,TenLop, TenKhoa
+  // Câu 13: Lập danh sách sinh viên có học bổng của khoa CNTT.
+  // Thông tin cần: MaSV, HoTen, HocBong,TenLop, TenKhoa
   async cau13() {
-    const cau13 = 'await this.baiTapService.cau13()';
+    const maKhoaCNTT = new mongoose.Types.ObjectId('622fe58e9ff19f0e85e41553');
+
+    const cau13 = await this.sinhVienModel.aggregate([
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: 'maLop',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: 'maKhoa',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $match: { hocBong: { $gt: 0 }, maKhoa: maKhoaCNTT } },
+      { $project: { id: '$_id', hoTen: 1, hocBong: 1, tenKhoa: 1, tenLop: 1 } },
+    ]);
     return cau13;
   }
 
   // Câu 14: Cho biết số sinh viên của mỗi lớp
+  // From lop: lop join sinhVien => count
+  // From sinhVien: group sinhVien by Lop => join lop => tenLop, maLop, slsSV
+
   async cau14() {
-    const cau14 = 'await this.baiTapService.cau14()';
+    const cau14 = this.sinhVienModel.aggregate([
+      { $group: { _id: '$maLop', totalSinhVien: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { _id: 1, tenLop: 1, totalSinhVien: 1 } },
+    ]);
     return cau14;
   }
 
   // Câu 15: Cho biết số lượng sinh viên của mỗi khoa.
   async cau15() {
-    const cau15 = 'await this.baiTapService.cau15()';
+    const cau15 = await this.sinhVienModel.aggregate([
+      { $group: { _id: '$maLop', totalSinhVien: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { _id: 1, totalSinhVien: 1, maKhoa: 1 } },
+      { $group: { _id: '$maKhoa', totalSinhVien: { $sum: '$totalSinhVien' } } },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $project: { id: '$_id', totalSinhVien: 1, tenKhoa: 1 } },
+    ]);
     return cau15;
   }
 
   // Câu 16: Cho biết số lượng sinh viên nữ của mỗi khoa.
   async cau16() {
-    const cau16 = 'await this.baiTapService.cau16()';
+    const cau16 = await this.sinhVienModel.aggregate([
+      { $match: { nu: true } },
+      { $group: { _id: '$maLop', totalSinhVienNu: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { _id: 1, totalSinhVienNu: 1, maKhoa: 1 } },
+      {
+        $group: {
+          _id: '$maKhoa',
+          totalSinhVienNu: { $sum: '$totalSinhVienNu' },
+        },
+      },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $project: { id: '$_id', totalSinhVienNu: 1, tenKhoa: 1 } },
+    ]);
     return cau16;
   }
 
   // Câu 17: Cho biết tổng tiền học bổng của mỗi lớp
   async cau17() {
-    const cau17 = 'await this.baiTapService.cau17()';
+    const cau17 = this.sinhVienModel.aggregate([
+      { $group: { _id: '$maLop', totalHocBong: { $sum: '$hocBong' } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { id: '$_id', tenLop: 1, totalHocBong: 1 } },
+    ]);
     return cau17;
   }
 
   // Câu 18: Cho biết tổng số tiền học bổng của mỗi khoa
+  // SinhVien + Lop => soTienHocBong of Lop
+  // Lop + Khoa => soTienHocBong of Khoa
   async cau18() {
-    const cau18 = 'await this.baiTapService.cau18()';
+    const cau18 = this.sinhVienModel.aggregate([
+      { $group: { _id: '$maLop', totalHocBong: { $sum: '$hocBong' } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $group: { _id: '$maKhoa', totalHocBong: { $sum: '$totalHocBong' } } },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $project: { id: '$_id', tenKhoa: 1, totalHocBong: 1 } },
+    ]);
     return cau18;
   }
 
-  // Câu 19: Lập danh sánh những khoa có nhiều hơn 100 sinh viên. Danh sách cần: MaKhoa, TenKhoa, Soluong
+  // Câu 19: Lập danh sánh những khoa có nhiều hơn 100 sinh viên.
+  // Danh sách cần: MaKhoa, TenKhoa, Soluong
   async cau19() {
-    const cau19 = 'await this.baiTapService.cau19()';
+    const minTotalSinhVien = 1000;
+    const cau19 = await this.sinhVienModel.aggregate([
+      { $group: { _id: '$maLop', totalSinhVien: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { _id: 1, totalSinhVien: 1, maKhoa: 1 } },
+      { $group: { _id: '$maKhoa', totalSinhVien: { $sum: '$totalSinhVien' } } },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $match: { totalSinhVien: { $gt: minTotalSinhVien } } },
+      { $project: { id: '$_id', totalSinhVien: 1, tenKhoa: 1 } },
+    ]);
     return cau19;
   }
 
   // Câu 20: Lập danh sánh những khoa có nhiều hơn 50 sinh viên nữ. Danh sách cần: MaKhoa, TenKhoa, Soluong
   async cau20() {
-    const cau20 = 'await this.baiTapService.cau20()';
+    const minTotalSVNu = 1;
+    const cau20 = await this.sinhVienModel.aggregate([
+      { $match: { nu: true } },
+      { $group: { _id: '$maLop', totalSinhVienNu: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { _id: 1, totalSinhVien: 1, maKhoa: 1 } },
+      {
+        $group: { _id: '$maKhoa', totalSinhVien: { $sum: '$totalSinhVienNu' } },
+      },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $match: { totalSinhVienNu: { $gt: minTotalSVNu } } },
+      { $project: { id: '$_id', totalSinhVienNu: 1, tenKhoa: 1 } },
+    ]);
     return cau20;
   }
 
   // Câu 21: Lập danh sách những khoa có tổng tiền học bổng >=1000000.
   async cau21() {
-    const cau21 = 'await this.baiTapService.cau21()';
+    let minTotalHocBong = 0.5;
+    const cau21 = this.sinhVienModel.aggregate([
+      { $group: { _id: '$maLop', totalHocBong: { $sum: '$hocBong' } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $group: { _id: '$maKhoa', totalHocBong: { $sum: '$totalHocBong' } } },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $match: { totalHocBong: { $gte: minTotalHocBong } } },
+      { $project: { id: '$_id', tenKhoa: 1, totalHocBong: 1 } },
+    ]);
     return cau21;
   }
 
@@ -199,19 +510,55 @@ export class BaiTapService {
 
   // Câu 24: Lập danh sách những sinh viên không có điểm thi môn CSDL.
   async cau24() {
-    // Tìm tất cả id sinh viên đã có điểm thi csdl trong model điểm thi
-    // Tìm tất cả sinh viên không có id sinh viên
-    const monCSDLId = '62300411ed9b0c051eae6067';
-    const cau24 = await this.ketQuaModel
-      .find({ maMH: monCSDLId, diemThi: { $exists: false } })
-      .populate('maSV')
-      .populate({ path: 'maMH', select: 'id tenMH' });
+    const maMonHocCSDL = '62300411ed9b0c051eae6067';
+    const maSinhViens = await this.ketQuaModel
+      .find({ maMH: maMonHocCSDL })
+      .distinct('maSV');
+
+    const cau24 = await this.sinhVienModel.find({
+      _id: { $nin: maSinhViens },
+    });
     return cau24;
   }
 
   // Câu 25: Cho biết những khoa nào có nhiều sinh viên nhất
   async cau25() {
-    const cau25 = 'await this.baiTapService.cau25()';
+    const cau25 = this.sinhVienModel.aggregate([
+      { $group: { _id: '$maLop', totalSinhVien: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: this.lopModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'lop',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $mergeObjects: [{ $arrayElemAt: ['$lop', 0] }, '$$ROOT'] },
+        },
+      },
+      { $project: { totalSinhVien: 1, maKhoa: 1 } },
+      { $group: { _id: '$maKhoa', totalSinhVien: { $sum: '$totalSinhVien' } } },
+      {
+        $lookup: {
+          from: this.khoaModel.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'khoa',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [{ $arrayElemAt: ['$khoa', 0] }, '$$ROOT'],
+          },
+        },
+      },
+      { $sort: { totalSinhVien: -1 } },
+      { $limit: 1 },
+      { $project: { id: '$_id', totalSinhVien: 1, tenKhoa: 1 } },
+    ]);
     return cau25;
   }
 }
